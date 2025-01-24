@@ -6,6 +6,8 @@ const Chat = () => {
   const [messages, setMessages] = useState([]);
   const [input, setInput] = useState("");
 
+  const API_URL = import.meta.env.VITE_API_URL || "https://convocraft-backend-u1do.onrender.com";
+
   const sendMessage = async () => {
     if (!input.trim()) return;
     const userMessage = { sender: "user", text: input };
@@ -13,7 +15,7 @@ const Chat = () => {
     setInput("");
 
     try {
-      const res = await axios.post("https://convocraft-backend-u1do.onrender.com", { message: input });
+      const res = await axios.post(`${API_URL}/chat`, { message: input });
       const botMessage = { sender: "bot", text: res.data.response };
       setMessages((prev) => [...prev, botMessage]);
     } catch (error) {
