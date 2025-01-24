@@ -2,6 +2,7 @@
 
 from flask import Flask, request, jsonify
 from flask_cors import CORS
+import os
 
 
 # modules for langgraph chatbot
@@ -28,8 +29,9 @@ llm = ChatOpenAI(model="gpt-4o-mini", api_key=api_key, max_tokens=150, temperatu
 
 # defining the Flask app
 app = Flask(__name__)
-CORS(app)  # enable cross-origin requests
+CORS(app, origins=['https://your-vercel-domain.vercel.app'])
 
+port = int(os.environ.get('PORT', 5001))
 
 
 def agent_node(state, agent, name):
@@ -211,5 +213,4 @@ def chat():
 
 
 if __name__ == '__main__':
-    print("I am a Medical Chatbot configured by LangGraph. (type 'exit' to end with assistance)")
-    app.run(host='0.0.0.0', port=5001)
+    app.run(host='0.0.0.0', port=port)
