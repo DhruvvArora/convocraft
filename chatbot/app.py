@@ -29,7 +29,8 @@ llm = ChatOpenAI(model="gpt-4o-mini", api_key=api_key, max_tokens=150, temperatu
 
 # defining the Flask app
 app = Flask(__name__)
-CORS(app, origins=['https://your-vercel-domain.vercel.app'])
+# Allow all origins in development, specify your frontend URL in production
+CORS(app, resources={r"/*": {"origins": "*"}})
 
 port = int(os.environ.get('PORT', 5001))
 
