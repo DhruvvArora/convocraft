@@ -13,7 +13,7 @@ const Chat = () => {
     setInput("");
 
     try {
-      const res = await axios.post("http://localhost:5001/chat", { message: input });
+      const res = await axios.post("https://convocraft-backend-u1do.onrender.com", { message: input });
       const botMessage = { sender: "bot", text: res.data.response };
       setMessages((prev) => [...prev, botMessage]);
     } catch (error) {
