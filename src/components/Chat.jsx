@@ -46,7 +46,7 @@ const Chat = () => {
       className="relative justify-center w-full bg-n-8 text-n-1 rounded-lg shadow-lg overflow-hidden h-[500px] flex flex-col"
     >
       <header className="p-4 bg-n-7 text-center text-lg font-semibold">
-        Chat with GraphMind, AI Assistant powered by LangGraph and !
+        Chat with GraphMind, AI Assistant powered by LangGraph and GPT!
       </header>
       <div className="flex-1 p-4 overflow-y-auto space-y-3">
         {messages.length === 0 && (
