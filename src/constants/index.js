@@ -296,12 +296,12 @@ export const socials = [
     iconUrl: linkedin,
     url: "https://www.linkedin.com/in/arora-dhruvv/",
   },
-  {
-    id: "1",
-    title: "Portfolio",
-    iconUrl: portfolio,
-    url: "https://dhruvarora.framer.website/",
-  },
+  // {
+  //   id: "1",
+  //   title: "Portfolio",
+  //   iconUrl: portfolio,
+  //   url: "https://dhruvarora.framer.website/",
+  // },
   // {
   //   id: "2",
   //   title: "Instagram",
