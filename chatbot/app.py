@@ -89,57 +89,47 @@ def OperatorAgent(state):
 
 
 
+# Helper: always return plain text from LangChain ChatOpenAI
+def ask_llm_text(prompt_input) -> str:
+    result = llm.invoke(prompt_input)
+    # ChatOpenAI.invoke returns an AIMessage
+    return result.content if hasattr(result, "content") else str(result)
+
 @tool
 def greeting_tool() -> str:
     """Fetches a greeting message from OpenAI."""
-    response = llm.invoke({"prompt": "Greet the user warmly and offer assistance, without any disclaimers."})
-    return response["choices"][0]["message"]["content"]
+    return ask_llm_text("Greet the user warmly and offer assistance.")
 
 @tool
 def farewell_tool() -> str:
     """Fetches a farewell message from OpenAI."""
-    response = llm.invoke({"prompt": "Say goodbye to the user in a friendly and polite manner, without any disclaimers."})
-    return response["choices"][0]["message"]["content"]
-
-
-# Define the system message
-system_instruction = "You are a confident and direct medical assistant. Provide information clearly without disclaimers or hesitation."
+    return ask_llm_text("Say goodbye to the user in a friendly and polite manner.")
 
 @tool
 def medicine_tool() -> str:
     """Fetches information about general medicines for common symptoms like fever or headache."""
-    # Create a prompt with the system message and the specific request
     prompt_template = ChatPromptTemplate.from_messages([
         ("system", system_instruction),
-        ("user", "Provide a clear and direct list of commonly recommended over-the-counter medications for treating fever. Focus solely on listing common medications for fever without disclaimers.")
+        ("user", "Provide a clear list of commonly recommended over-the-counter medications for treating fever.")
     ])
-    
-    response = llm.invoke(prompt_template())
-    return response["choices"][0]["message"]["content"]
 
-
+    # Option 1: format messages then invoke
+    messages = prompt_template.format_messages()
+    return ask_llm_text(messages)
 
 @tool
 def medical_hospital_tool() -> str:
     """Fetches information about nearby hospitals based on general location data."""
-    response = llm.invoke({
-        "prompt": (
-            "Provide detailed information about general hospitals that offer a range of medical services. "
-            "Avoid disclaimers and focus on listing the types of hospitals typically found in urban areas."
-        )
-    })
-    return response["choices"][0]["message"]["content"]
+    return ask_llm_text(
+        "Provide information about general hospitals that offer a range of medical services."
+    )
 
 @tool
 def medical_department_tool() -> str:
     """Fetches information about medical departments available in a hospital."""
-    response = llm.invoke({
-        "prompt": (
-            "List common medical departments in a hospital and briefly describe their primary functions. "
-            "Avoid any disclaimers and focus directly on department details."
-        )
-    })
-    return response["choices"][0]["message"]["content"]
+    return ask_llm_text(
+        "List common medical departments in a hospital and briefly describe their primary functions."
+    )
 
 
 GreetingsAgent = create_react_agent(llm, tools=[greeting_tool])
@@ -184,33 +174,40 @@ graph = workflow.compile()
 user_messages = []
 
 
+import traceback
+
 @app.route('/chat', methods=['POST'])
 def chat():
-    """Handle chat requests and return only the response messages."""
-    user_input = request.json.get('message', "")
-    user_messages = [HumanMessage(content=user_input)]
-    response_message = None  # To track the final bot response
+    try:
+        data = request.get_json(silent=True) or {}
+        user_input = (data.get('message') or "").strip()
 
-    # Process the graph to get responses
-    for state in graph.stream({"messages": user_messages}):
-        if "__end__" not in state:
-            for agent_name, agent_response in state.items():
+        if not user_input:
+            return jsonify({"response": "Please enter a message."}), 400
 
-                if agent_name == "UserProxy":
-                    continue
+        user_messages = [HumanMessage(content=user_input)]
+        response_message = None
 
-                # Process and return only bot-generated messages
-                if "messages" in agent_response and agent_response["messages"]:
-                    last_message = agent_response["messages"][-1]
-                    if last_message.content != user_input:  # Avoid echoing the user's message
-                        response_message = last_message.content
-                        user_messages.append(last_message)  # Add bot response to history
+        for state in graph.stream({"messages": user_messages}):
+            if "__end__" not in state:
+                for agent_name, agent_response in state.items():
+                    if agent_name == "UserProxy":
+                        continue
 
-    # If no response was generated, return an appropriate message
-    if not response_message:
-        response_message = "The chatbot did not provide a response."
+                    if "messages" in agent_response and agent_response["messages"]:
+                        last_message = agent_response["messages"][-1]
+                        if last_message.content != user_input:
+                            response_message = last_message.content
+                            user_messages.append(last_message)
 
-    return jsonify({"response": response_message})
+        if not response_message:
+            response_message = "The chatbot did not provide a response."
+
+        return jsonify({"response": response_message})
+
+    except Exception as e:
+        app.logger.exception("Error in /chat")
+        return jsonify({"error": str(e)}), 500
 
 
 if __name__ == '__main__':

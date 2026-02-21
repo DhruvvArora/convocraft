@@ -19,8 +19,16 @@ const Chat = () => {
       const botMessage = { sender: "bot", text: res.data.response };
       setMessages((prev) => [...prev, botMessage]);
     } catch (error) {
-      console.error("Error communicating with the chatbot", error);
-      const errorMessage = { sender: "bot", text: "Something went wrong. Please try again." };
+      console.error("Error communicating with the chatbot", {
+        status: error.response?.status,
+        data: error.response?.data,
+        message: error.message,
+      });
+    
+      const errorMessage = {
+        sender: "bot",
+        text: "Something went wrong. Please try again.",
+      };
       setMessages((prev) => [...prev, errorMessage]);
     }
   };
@@ -38,7 +46,7 @@ const Chat = () => {
       className="relative justify-center w-full bg-n-8 text-n-1 rounded-lg shadow-lg overflow-hidden h-[500px] flex flex-col"
     >
       <header className="p-4 bg-n-7 text-center text-lg font-semibold">
-        Chat with GraphMind, Medical Assistant powered by LangGraph!
+        Chat with GraphMind, AI Assistant powered by LangGraph and !
       </header>
       <div className="flex-1 p-4 overflow-y-auto space-y-3">
         {messages.length === 0 && (
